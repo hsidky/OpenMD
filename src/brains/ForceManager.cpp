@@ -60,6 +60,7 @@
 #include "perturbations/UniformField.hpp"
 #include "perturbations/UniformGradient.hpp"
 #include "parallel/ForceMatrixDecomposition.hpp"
+#include "OpenMDHook.h"
 
 #include <cstdio>
 #include <iostream>
@@ -436,6 +437,11 @@ namespace OpenMD {
     preCalculation();
     shortRangeInteractions();
     longRangeInteractions();
+
+    auto& ssages = SSAGES::OpenMDHook::Instance();
+    ssages.SyncToSSAGES();
+    ssages.PostIntegrationHook();
+
     postCalculation();
   }
   

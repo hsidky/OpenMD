@@ -51,6 +51,8 @@
 #include "integrators/DLM.hpp"
 #include "utils/StringUtils.hpp"
 #include "utils/ProgressBar.hpp"
+#include "OpenMDHook.h"
+#include <mpi.h>
 
 namespace OpenMD {
   VelocityVerletIntegrator::VelocityVerletIntegrator(SimInfo *info) : Integrator(info) { 
@@ -70,6 +72,11 @@ namespace OpenMD {
 
     // find the initial fluctuating charges.
     flucQ_->initialize();
+    
+    auto& ssages = SSAGES::OpenMDHook::Instance();
+    ssages.SetSimInfo(info_);
+    ssages.SyncToSSAGES();
+    ssages.PreSimulationHook();
     
     // initialize the forces before the first step
     calcForce();
@@ -195,6 +202,10 @@ namespace OpenMD {
 
 
   void VelocityVerletIntegrator::finalize() {
+    auto& ssages = SSAGES::OpenMDHook::Instance();
+    ssages.SyncToSSAGES();
+    ssages.PostSimulationHook();
+    
     dumpWriter->writeEor();
     if (simParams->getRNEMDParameters()->getUseRNEMD()) {
       rnemd_->writeOutputFile();
